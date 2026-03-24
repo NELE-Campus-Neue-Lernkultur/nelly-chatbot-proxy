@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title><!-- wird per JS aus CONFIG gesetzt -->
+
+    <!-- Preconnect für schnelleres Font-Laden (bleibt unabhängig von der gewählten Schrift) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <style>
+        :root {
+            --color-header: #bff0ed;
+            --color-button: #316879;
+            --font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .chat-header {
+            background: var(--color-header);
+            color: #1f1f1f;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chat-header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .chat-header h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            font-family: var(--font-family);
+            color: #1f1f1f;
+            line-height: 1.3;
+        }
+
+        .desktop-break {
+            display: inline;
+        }
+
+        .nele-logo {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+        }
+
+        .reset-button {
+            background: transparent;
+            border: 2px solid #1f1f1f;
+            color: #1f1f1f;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: var(--font-family);
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .reset-button:hover {
+            background: rgba(31, 31, 31, 0.1);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            max-width: 80%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+        }
+
+        .message-content {
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.6;
+            font-family: var(--font-family);
+        }
+
+        .message.user .message-content {
+            background: var(--color-button);
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .message.assistant .message-content h1,
+        .message.assistant .message-content h2,
+        .message.assistant .message-content h3,
+        .message.assistant .message-content h4 {
+            margin-top: 16px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .message.assistant .message-content h1 {
+            font-size: 1.5em;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 4px;
+        }
+
+        .message.assistant .message-content h2 { font-size: 1.3em; }
+        .message.assistant .message-content h3 { font-size: 1.15em; }
+        .message.assistant .message-content h4 { font-size: 1em; }
+
+        .message.assistant .message-content h1:first-child,
+        .message.assistant .message-content h2:first-child,
+        .message.assistant .message-content h3:first-child,
+        .message.assistant .message-content h4:first-child {
+            margin-top: 0;
+        }
+
+        .message.assistant .message-content p { margin-bottom: 12px; }
+        .message.assistant .message-content p:last-child { margin-bottom: 0; }
+
+        .message.assistant .message-content strong {
+            font-weight: 600;
+            color: #222;
+        }
+
+        .message.assistant .message-content em {
+            font-style: italic;
+            color: #555;
+        }
+
+        .message.assistant .message-content ul,
+        .message.assistant .message-content ol {
+            margin: 12px 0;
+            padding-left: 24px;
+        }
+
+        .message.assistant .message-content li { margin-bottom: 6px; }
+
+        .message.assistant .message-content code {
+            background: #e8e8e8;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .message.assistant .message-content pre {
+            background: #2d2d2d;
+            color: #f8f8f8;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        .message.assistant .message-content pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        .message.assistant .message-content blockquote {
+            border-left: 4px solid var(--color-button);
+            padding-left: 16px;
+            margin: 12px 0;
+            color: #555;
+            font-style: italic;
+        }
+
+        .message.assistant .message-content hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 16px 0;
+        }
+
+        .message.assistant .message-content a {
+            color: var(--color-button);
+            text-decoration: underline;
+        }
+
+        .message.assistant .message-content a:hover { color: #1f1f1f; }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .message.user .message-avatar {
+            background: var(--color-button);
+            color: white;
+            font-size: 20px;
+        }
+
+        .message.assistant .message-avatar {
+            background: transparent;
+            padding: 0;
+        }
+
+        .message.assistant .message-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 24px;
+            font-size: 16px;
+            font-family: var(--font-family);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #messageInput:focus { border-color: var(--color-button); }
+
+        #sendButton {
+            padding: 12px 24px;
+            background: var(--color-button);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-weight: 500;
+            font-family: var(--font-family);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #sendButton:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        #sendButton:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            padding: 12px 16px;
+            background: #f0f0f0;
+            border-radius: 18px;
+            width: fit-content;
+        }
+
+        .typing-indicator.active { display: flex; }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30%            { transform: translateY(-10px); }
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 20px;
+            border: 1px solid #f5c6cb;
+            font-family: var(--font-family);
+        }
+
+        .disclaimer {
+            padding: 15px 20px;
+            background: #f9f9f9;
+            border-top: 1px solid #e0e0e0;
+            font-size: 11px;
+            color: #666;
+            line-height: 1.5;
+            text-align: left;
+            font-family: var(--font-family);
+        }
+
+        .disclaimer strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .disclaimer a {
+            color: var(--color-button);
+            text-decoration: underline;
+            font-size: 11px !important;
+        }
+
+        .disclaimer a:hover { color: #1f1f1f; }
+
+        @media (max-width: 650px) {
+            .chat-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .chat-header-content { width: 100%; }
+            .reset-button { align-self: flex-start; }
+
+            .nele-logo {
+                width: 60px;
+                height: 60px;
+            }
+
+            .chat-header h1 { font-size: 1.2rem; }
+            .desktop-break { display: none; }
+
+            .chat-messages {
+                padding: 12px 8px;
+                gap: 12px;
+            }
+
+            .message {
+                max-width: 92%;
+                gap: 8px;
+            }
+
+            .message-avatar {
+                width: 32px;
+                height: 32px;
+            }
+
+            .message.user .message-avatar { font-size: 18px; }
+
+            /* font-size 16px verhindert Auto-Zoom auf iOS */
+            #messageInput { font-size: 16px; }
+
+            .chat-input-container { padding: 12px; }
+
+            #sendButton {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-header-content">
+                <img id="headerLogo" src="" alt="Logo" class="nele-logo">
+                <h1 id="headerTitle"></h1>
+            </div>
+            <button class="reset-button" id="resetButton">🔄 Neu Starten</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <!-- Nachrichten werden hier eingefügt -->
+        </div>
+
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <input
+                    type="text"
+                    id="messageInput"
+                    placeholder="Schreibe hier deine Antwort…"
+                    autocomplete="off"
+                >
+                <button id="sendButton">Senden</button>
+            </div>
+        </div>
+
+        <div class="disclaimer" id="disclaimer">
+            <!-- wird per JS aus CONFIG befüllt -->
+        </div>
+    </div>
+
+    <!-- Marked.js für Markdown-Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+    // ═══════════════════════════════════════════════════════════════════
+    //  KONFIGURATION – hier alle Anpassungen vornehmen
+    // ═══════════════════════════════════════════════════════════════════
+
+    const CONFIG = {
+
+        // ── Proxy-Server ────────────────────────────────────────────────
+        // URL deines eigenen Proxy-Servers (aus server.js)
+        proxyUrl: 'https://proxy.nele-campus.org/api/chat',
+
+        // ── Texte ────────────────────────────────────────────────────────
+        // Browsertitel (Tab)
+        pageTitle: 'Fortbildungsideen-GeNELErator',
+
+        // Überschrift im Header (HTML erlaubt, z. B. <br> für Zeilenumbruch)
+        headerTitle: 'Entdecke mit NELE<br class="desktop-break"> deine passende Fortbildung',
+
+        // Name des Chatbots (für Avatar-Alt-Text)
+        botName: 'NELE',
+
+        // Erste Nachricht des Chatbots beim Öffnen
+        welcomeMessage: `Hallo, ich bin NELE und unterstütze dich dabei, für dich passende Fortbildungen auf dem NELE – Campus zu finden!
+
+Entdecke unsere Online-Selbstlernkurse: kostenlos, zeit- und ortsunabhängig absolvierbar und mit Teilnahmebescheinigung zur Anrechnung für dein Fortbildungskontingent!
+
+Meine erste Frage:
+**Welche Rolle hast du an deiner Schule? Lehrkraft, Schulleitung, pädagogisches Personal oder eine andere Rolle?**`,
+
+        // ── Bilder ───────────────────────────────────────────────────────
+        // Logo im Header
+        logoUrl: 'https://kiron-static.s3.cbk.cloud.syseleven.net/resources/client-resources/12/assets/new-n/nele-n-1.png',
+
+        // Avatar neben den Chatbot-Nachrichten
+        avatarUrl: 'https://kiron-static.s3.cbk.cloud.syseleven.net/resources/client-resources/12/assets/new-n/n-avatar-chatbot.png',
+
+        // ── Farben ───────────────────────────────────────────────────────
+        // Hintergrundfarbe des Headers
+        headerColor: '#bff0ed',
+
+        // Farbe des Sende-Buttons und der Nutzernachrichten
+        buttonColor: '#316879',
+
+        // ── Schrift ──────────────────────────────────────────────────────
+        // Name der Schriftart (muss mit fontUrl übereinstimmen)
+        fontFamily: 'Work Sans',
+
+        // Google Fonts URL – auf https://fonts.google.com/ die gewünschte
+        // Schrift suchen und den Einbettungslink hier eintragen.
+        // Leer lassen ('') um die System-Schrift zu verwenden.
+        fontUrl: 'https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap',
+
+        // ── Datenschutz ──────────────────────────────────────────────────
+        // Link zur Datenschutzerklärung deiner Organisation
+        privacyUrl: 'https://app.nele-campus.org/privacy-policy/#privacy',
+
+        // Datenschutzhinweis-Text (HTML erlaubt; PRIVACY_URL wird durch den Wert von privacyUrl ersetzt)
+        privacyNotice: 'Bitte gib keine persönlichen Daten (wie deinen vollen Namen, Adressen oder Namen von Schüler:innen/Kolleg:innen) in diesen Chat ein. Deine Anfragen werden über unseren eigenen Server weitergeleitet – deine IP-Adresse wird nicht an Mistral übermittelt. Die Eingaben werden zur Beantwortung über die Mistral-API auf europäischen Servern DSGVO-konform verarbeitet. Zur Qualitätssicherung werden Gesprächsverläufe anonymisiert auf unserem Server gespeichert und nach 180 Tagen automatisch gelöscht. Deine Daten werden nicht zum Training von KI-Modellen verwendet. Weitere Informationen findest du in unserer <a href="PRIVACY_URL" target="_blank">Datenschutzerklärung</a>.',
+
+        // Urheberrechtshinweis unterhalb des Datenschutztexts (HTML erlaubt, leer lassen um wegzulassen)
+        privacyCredit: `Avatar NELE N – Ausgestaltung Figur: <a href="https://zckrnetzwerk.de" target="_blank">zckrnetzwerk.de</a>, Konzept und Originalfigur: <a href="https://jessiejoo.de" target="_blank">jessiejoo.de</a>. Lizenz: CC-BY-ND 4.0`,
+
+    };
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  AB HIER NICHTS MEHR ÄNDERN
+    // ═══════════════════════════════════════════════════════════════════
+
+    // Schrift laden
+    if (CONFIG.fontUrl) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = CONFIG.fontUrl;
+        document.head.appendChild(link);
+    }
+
+    // CSS-Variablen und Seiteninhalte aus CONFIG setzen
+    const root = document.documentElement;
+    root.style.setProperty('--color-header', CONFIG.headerColor);
+    root.style.setProperty('--color-button', CONFIG.buttonColor);
+    root.style.setProperty('--font-family', `'${CONFIG.fontFamily}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`);
+
+    document.title = CONFIG.pageTitle;
+    document.getElementById('headerLogo').src = CONFIG.logoUrl;
+    document.getElementById('headerLogo').alt = CONFIG.botName + ' Logo';
+    document.getElementById('headerTitle').innerHTML = CONFIG.headerTitle;
+
+    // Datenschutzhinweis aufbauen
+    const privacyText = CONFIG.privacyNotice.replace('PRIVACY_URL', CONFIG.privacyUrl);
+    const creditLine = CONFIG.privacyCredit ? `<br><br>${CONFIG.privacyCredit}` : '';
+    document.getElementById('disclaimer').innerHTML =
+        `<strong>🔒 Hinweise zum Datenschutz</strong>${privacyText}${creditLine}`;
+
+    // ── Chat-Logik ───────────────────────────────────────────────────────
+
+    const chatMessages  = document.getElementById('chatMessages');
+    const messageInput  = document.getElementById('messageInput');
+    const sendButton    = document.getElementById('sendButton');
+    const resetButton   = document.getElementById('resetButton');
+
+    let conversationHistory = [];
+
+    marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
+
+    const STORAGE_KEY = 'nele_chat_history';
+    const ROLE_KEY    = 'nele_user_role';
+
+    function saveToStorage() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationHistory)); }
+        catch (e) { console.error('Fehler beim Speichern:', e); }
+    }
+
+    function loadFromStorage() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                conversationHistory = JSON.parse(saved);
+                conversationHistory.forEach(msg => addMessage(msg.content, msg.role, false));
+                return true;
+            }
+        } catch (e) { console.error('Fehler beim Laden:', e); }
+        return false;
+    }
+
+    function clearStorage() {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(ROLE_KEY);
+    }
+
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+    sendButton.addEventListener('click', sendMessage);
+
+    function addMessage(content, role, animate = true) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${role}`;
+        if (!animate) messageDiv.style.animation = 'none';
+
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+
+        if (role === 'user') {
+            avatar.textContent = '👤';
+        } else {
+            const img = document.createElement('img');
+            img.src = CONFIG.avatarUrl;
+            img.alt = CONFIG.botName;
+            avatar.appendChild(img);
+        }
+
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+
+        if (role === 'assistant') {
+            try { messageContent.innerHTML = marked.parse(content); }
+            catch (e) { messageContent.textContent = content; }
+        } else {
+            messageContent.textContent = content;
+        }
+
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(messageContent);
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+        const indicator = document.createElement('div');
+        indicator.className = 'message assistant';
+        indicator.id = 'typingIndicator';
+
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        const img = document.createElement('img');
+        img.src = CONFIG.avatarUrl;
+        img.alt = CONFIG.botName;
+        avatar.appendChild(img);
+
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing-indicator active';
+        typingDiv.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+
+        indicator.appendChild(avatar);
+        indicator.appendChild(typingDiv);
+        chatMessages.appendChild(indicator);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+        const el = document.getElementById('typingIndicator');
+        if (el) el.remove();
+    }
+
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = '❌ Fehler: ' + message;
+        chatMessages.appendChild(errorDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        setTimeout(() => errorDiv.remove(), 5000);
+    }
+
+    // Eindeutige Session-ID pro Tab-Sitzung
+    let sessionId = sessionStorage.getItem('nele_session_id');
+    if (!sessionId) {
+        sessionId = 'sess_' + Math.random().toString(36).substr(2, 12);
+        sessionStorage.setItem('nele_session_id', sessionId);
+    }
+
+    async function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        conversationHistory.push({ role: 'user', content: message });
+
+        // Erste Nutzereingabe als Rolle speichern (wird in Folgesitzungen als
+        // Kontext vorangestellt, damit der Chatbot die Rolle des Nutzers kennt)
+        if (conversationHistory.filter(m => m.role === 'user').length === 1) {
+            localStorage.setItem(ROLE_KEY, message);
+        }
+
+        saveToStorage();
+        addMessage(message, 'user');
+        messageInput.value = '';
+        messageInput.disabled = true;
+        sendButton.disabled = true;
+        showTypingIndicator();
+
+        // Gespeicherte Rolle aus vorheriger Sitzung an den Anfang stellen
+        const savedRole = localStorage.getItem(ROLE_KEY);
+        const messagesWithContext = savedRole && conversationHistory.filter(m => m.role === 'user').length === 1
+            ? [{ role: 'user', content: savedRole }, ...conversationHistory]
+            : conversationHistory;
+
+        try {
+            const response = await fetch(CONFIG.proxyUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId, messages: messagesWithContext })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Fehler: ${response.status}`);
+            }
+
+            const data = await response.json();
+            removeTypingIndicator();
+
+            if (data.message) {
+                conversationHistory.push({ role: 'assistant', content: data.message });
+                saveToStorage();
+                addMessage(data.message, 'assistant');
+            } else {
+                throw new Error('Unerwartetes Antwortformat');
+            }
+
+        } catch (error) {
+            removeTypingIndicator();
+            conversationHistory.pop();
+            saveToStorage();
+            showError(error.message);
+            console.error('Fehler:', error);
+        } finally {
+            messageInput.disabled = false;
+            sendButton.disabled = false;
+            messageInput.focus();
+        }
+    }
+
+    function resetChat() {
+        if (conversationHistory.length > 0) {
+            if (!confirm('Möchtest du den Chat wirklich zurücksetzen? Der Verlauf wird gelöscht.')) return;
+        }
+        conversationHistory = [];
+        chatMessages.innerHTML = '';
+        clearStorage();
+        addMessage(CONFIG.welcomeMessage, 'assistant', false);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        resetButton.addEventListener('click', resetChat);
+        if (!loadFromStorage()) {
+            addMessage(CONFIG.welcomeMessage, 'assistant', false);
+        }
+    });
+    </script>
+</body>
+</html>
