@@ -555,6 +555,18 @@ Meine erste Frage:
 
     marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
 
+    // Links in Chatbot-Antworten immer in neuem Tab öffnen
+    marked.use({
+        renderer: {
+            link(href, title, text) {
+                const h = (href && typeof href === 'object') ? href.href : href;
+                const ti = (href && typeof href === 'object') ? href.title : title;
+                const tx = (href && typeof href === 'object') ? href.text : text;
+                return `<a href="${h}"${ti ? ` title="${ti}"` : ''} target="_blank" rel="noopener noreferrer">${tx}</a>`;
+            }
+        }
+    });
+
     const STORAGE_KEY = 'nele_chat_history';
     const ROLE_KEY    = 'nele_user_role';
 
