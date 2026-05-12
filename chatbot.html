@@ -78,8 +78,8 @@
 
         .reset-button {
             background: transparent;
-            border: 2px solid #1f1f1f;
-            color: #1f1f1f;
+            border: 2px solid #316879;
+            color: #316879;
             padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
@@ -128,16 +128,43 @@
             border-radius: 18px;
             line-height: 1.6;
             font-family: var(--font-family);
+            position: relative;
         }
 
         .message.user .message-content {
             background: var(--color-button);
             color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .message.user .message-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: -7px;
+            width: 0;
+            height: 0;
+            border: 8px solid transparent;
+            border-left-color: var(--color-button);
+            border-right: 0;
+            border-bottom: 0;
         }
 
         .message.assistant .message-content {
             background: #f0f0f0;
             color: #333;
+            border-bottom-left-radius: 4px;
+        }
+        .message.assistant .message-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -7px;
+            width: 0;
+            height: 0;
+            border: 8px solid transparent;
+            border-right-color: #f0f0f0;
+            border-left: 0;
+            border-bottom: 0;
         }
 
         .message.assistant .message-content h1,
@@ -235,30 +262,18 @@
         .message-avatar {
             width: 36px;
             height: 36px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
             flex-shrink: 0;
-            overflow: hidden;
-        }
-
-        .message.user .message-avatar {
-            background: var(--color-button);
-            color: white;
-            font-size: 20px;
-        }
-
-        .message.assistant .message-avatar {
+            font-size: 22px;
             background: transparent;
-            padding: 0;
         }
 
         .message.assistant .message-avatar img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
         }
 
         .chat-input-container {
@@ -424,7 +439,7 @@
                 <img id="headerLogo" src="" alt="Logo" class="nele-logo">
                 <h1 id="headerTitle"></h1>
             </div>
-            <button class="reset-button" id="resetButton">🔄 Neu Starten</button>
+            <button class="reset-button" id="resetButton">Neu starten</button>
         </div>
 
         <div class="chat-messages" id="chatMessages">
@@ -467,13 +482,13 @@
         pageTitle: 'Fortbildungsideen-GeNELErator',
 
         // Überschrift im Header (HTML erlaubt, z. B. <br> für Zeilenumbruch)
-        headerTitle: 'Entdecke mit NELE<br class="desktop-break"> deine passende Fortbildung',
+        headerTitle: 'KI-Chatbot Nelli findet für dich die passende Fortbildung!',
 
         // Name des Chatbots (für Avatar-Alt-Text)
-        botName: 'NELE',
+        botName: 'Nelli',
 
         // Erste Nachricht des Chatbots beim Öffnen
-        welcomeMessage: `Hallo, ich bin NELE und unterstütze dich dabei, für dich passende Fortbildungen auf dem NELE – Campus zu finden!
+        welcomeMessage: `Hallo, ich bin der KI-Chatbot Nelli und unterstütze dich dabei, für dich passende Fortbildungen auf dem NELE – Campus zu finden!
 
 Entdecke unsere Online-Selbstlernkurse: kostenlos, zeit- und ortsunabhängig absolvierbar und mit Teilnahmebescheinigung zur Anrechnung für dein Fortbildungskontingent!
 
@@ -511,7 +526,7 @@ Meine erste Frage:
         privacyNotice: 'Bitte gib keine persönlichen Daten (wie deinen vollen Namen, Adressen oder Namen von Schüler:innen/Kolleg:innen) in diesen Chat ein. Deine Anfragen werden über unseren eigenen Server weitergeleitet – deine IP-Adresse wird nicht an Mistral übermittelt. Die Eingaben werden zur Beantwortung über die Mistral-API auf europäischen Servern DSGVO-konform verarbeitet. Zur Qualitätssicherung werden Gesprächsverläufe anonymisiert auf unserem Server gespeichert und nach 180 Tagen automatisch gelöscht. Deine Daten werden nicht zum Training von KI-Modellen verwendet. Weitere Informationen findest du in unserer <a href="PRIVACY_URL" target="_blank">Datenschutzerklärung</a>.',
 
         // Urheberrechtshinweis unterhalb des Datenschutztexts (HTML erlaubt, leer lassen um wegzulassen)
-        privacyCredit: `Avatar NELE N – Ausgestaltung Figur: <a href="https://zckrnetzwerk.de" target="_blank">zckrnetzwerk.de</a>, Konzept und Originalfigur: <a href="https://jessiejoo.de" target="_blank">jessiejoo.de</a>. Lizenz: CC-BY-ND 4.0`,
+        privacyCredit: '',
 
     };
 
@@ -627,7 +642,17 @@ Meine erste Frage:
         messageDiv.appendChild(avatar);
         messageDiv.appendChild(messageContent);
         chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        if (role === 'assistant' && animate) {
+            setTimeout(() => {
+                const rect          = messageDiv.getBoundingClientRect();
+                const containerRect = chatMessages.getBoundingClientRect();
+                const targetTop     = rect.top - containerRect.top + chatMessages.scrollTop - 12;
+                chatMessages.scrollTo({ top: targetTop, behavior: 'smooth' });
+            }, 50);
+        } else {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
     }
 
     function showTypingIndicator() {
