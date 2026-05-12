@@ -1,0 +1,829 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  NELE Chatbot – Webflow Embed-Version                           ║
+  ║                                                                  ║
+  ║  Diesen Code in ein Webflow HTML-Embed-Element einfügen.        ║
+  ║  Konfiguration: nur den CONFIG-Block weiter unten anpassen.     ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+
+<!-- ── Google Font (wird nur geladen wenn fontUrl gesetzt ist) ──── -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<style>
+  /* ── Scoped CSS: alle Regeln beginnen mit #nele-chatbot ──────── */
+  /* ── Kein Einfluss auf den Rest der Webflow-Seite ─────────────── */
+
+  #nele-chatbot {
+    /* Design-Tokens – passen sich automatisch an CONFIG an */
+    --nele-header:  #bff0ed;
+    --nele-button:  #316879;
+    --nele-font:    'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    font-family: var(--nele-font);
+    width: 100%;
+    /* Außenabstand zum Seiteninhalt */
+    padding: 48px 20px;
+  }
+
+  /* Sauberer Reset nur innerhalb des Chatbots */
+  #nele-chatbot *, #nele-chatbot *::before, #nele-chatbot *::after {
+    box-sizing: border-box;
+  }
+
+  /* ── Chat-Karte ─────────────────────────────────────────────── */
+  #nele-chatbot .nele-card {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 0;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.10);
+    display: flex;
+    flex-direction: column;
+    /* Komfortable Chat-Höhe: ca. 160px kleiner als vorher, Mobil wird per Media Query überschrieben */
+    height: clamp(512px, 64vh, 704px);
+  }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  #nele-chatbot .nele-header {
+    background: var(--nele-header);
+    color: #1f1f1f;
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+
+  #nele-chatbot .nele-header-content {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 0; /* verhindert Overflow des h2 */
+  }
+
+  #nele-chatbot .nele-logo {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  #nele-chatbot .nele-header h2 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.35;
+    color: #1f1f1f;
+    margin: 0;
+    padding: 0;
+  }
+
+  #nele-chatbot .nele-reset-btn {
+    background: transparent;
+    border: 2px solid #316879;
+    color: #316879;
+    padding: 7px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: var(--nele-font);
+    transition: background 0.2s, border-color 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  #nele-chatbot .nele-reset-btn:hover {
+    background: rgba(31, 31, 31, 0.08);
+    border-color: rgba(31, 31, 31, 0.8);
+  }
+
+  /* ── Nachrichten-Bereich ─────────────────────────────────────── */
+  #nele-chatbot .nele-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scroll-behavior: smooth;
+  }
+
+  /* Schlanke Scrollbar */
+  #nele-chatbot .nele-messages::-webkit-scrollbar { width: 5px; }
+  #nele-chatbot .nele-messages::-webkit-scrollbar-track { background: transparent; }
+  #nele-chatbot .nele-messages::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+  }
+
+  /* ── Einzelne Nachricht ─────────────────────────────────────── */
+  #nele-chatbot .nele-msg {
+    display: flex;
+    gap: 9px;
+    max-width: 82%;
+    animation: nele-in 0.28s ease-out;
+  }
+
+  @keyframes nele-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0);   }
+  }
+
+  #nele-chatbot .nele-msg.user      { align-self: flex-end; flex-direction: row-reverse; }
+  #nele-chatbot .nele-msg.assistant { align-self: flex-start; }
+
+  #nele-chatbot .nele-bubble {
+    padding: 11px 16px;
+    border-radius: 18px;
+    line-height: 1.65;
+    font-size: 15px;
+    font-family: var(--nele-font);
+    position: relative;
+  }
+
+  /* ── Sprechblasen-Schwanz (Nutzer, rechts) ───────────────────── */
+  #nele-chatbot .nele-msg.user .nele-bubble {
+    background: var(--nele-button);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  #nele-chatbot .nele-msg.user .nele-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: -7px;
+    width: 0;
+    height: 0;
+    border: 8px solid transparent;
+    border-left-color: var(--nele-button);
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  /* ── Sprechblasen-Schwanz (Chatbot, links) ───────────────────── */
+  #nele-chatbot .nele-msg.assistant .nele-bubble {
+    background: #f0f0f0;
+    color: #2a2a2a;
+    border-bottom-left-radius: 4px;
+  }
+  #nele-chatbot .nele-msg.assistant .nele-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -7px;
+    width: 0;
+    height: 0;
+    border: 8px solid transparent;
+    border-right-color: #f0f0f0;
+    border-left: 0;
+    border-bottom: 0;
+  }
+
+  /* Markdown-Inhalte in Chatbot-Antworten */
+  #nele-chatbot .nele-msg.assistant .nele-bubble h1,
+  #nele-chatbot .nele-msg.assistant .nele-bubble h2,
+  #nele-chatbot .nele-msg.assistant .nele-bubble h3,
+  #nele-chatbot .nele-msg.assistant .nele-bubble h4 {
+    margin: 14px 0 6px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #1a1a1a;
+  }
+  #nele-chatbot .nele-msg.assistant .nele-bubble h1:first-child,
+  #nele-chatbot .nele-msg.assistant .nele-bubble h2:first-child,
+  #nele-chatbot .nele-msg.assistant .nele-bubble h3:first-child,
+  #nele-chatbot .nele-msg.assistant .nele-bubble h4:first-child { margin-top: 0; }
+
+  #nele-chatbot .nele-msg.assistant .nele-bubble h1 { font-size: 1.3em; }
+  #nele-chatbot .nele-msg.assistant .nele-bubble h2 { font-size: 1.15em; }
+  #nele-chatbot .nele-msg.assistant .nele-bubble h3 { font-size: 1.05em; }
+
+  #nele-chatbot .nele-msg.assistant .nele-bubble p  { margin-bottom: 10px; }
+  #nele-chatbot .nele-msg.assistant .nele-bubble p:last-child { margin-bottom: 0; }
+
+  #nele-chatbot .nele-msg.assistant .nele-bubble ul,
+  #nele-chatbot .nele-msg.assistant .nele-bubble ol {
+    margin: 10px 0;
+    padding-left: 22px;
+  }
+  #nele-chatbot .nele-msg.assistant .nele-bubble li { margin-bottom: 5px; }
+
+  #nele-chatbot .nele-msg.assistant .nele-bubble strong { font-weight: 600; color: #111; }
+  #nele-chatbot .nele-msg.assistant .nele-bubble em     { font-style: italic; color: #555; }
+
+  #nele-chatbot .nele-msg.assistant .nele-bubble a {
+    color: var(--nele-button);
+    text-decoration: underline;
+  }
+  #nele-chatbot .nele-msg.assistant .nele-bubble a:hover { color: #1f1f1f; }
+
+  #nele-chatbot .nele-msg.assistant .nele-bubble code {
+    background: #e5e5e5;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.88em;
+    font-family: 'Courier New', monospace;
+  }
+  #nele-chatbot .nele-msg.assistant .nele-bubble pre {
+    background: #2d2d2d;
+    color: #f8f8f8;
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 10px 0;
+    font-size: 0.88em;
+  }
+  #nele-chatbot .nele-msg.assistant .nele-bubble pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+  }
+  #nele-chatbot .nele-msg.assistant .nele-bubble blockquote {
+    border-left: 4px solid var(--nele-button);
+    padding-left: 14px;
+    margin: 10px 0;
+    color: #555;
+    font-style: italic;
+  }
+  #nele-chatbot .nele-msg.assistant .nele-bubble hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 14px 0;
+  }
+
+  /* ── Avatar ─────────────────────────────────────────────────── */
+  #nele-chatbot .nele-avatar {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    background: transparent;
+  }
+  #nele-chatbot .nele-msg.assistant .nele-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* ── Tipp-Indikator ─────────────────────────────────────────── */
+  #nele-chatbot .nele-typing {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    padding: 11px 15px;
+    background: #f0f0f0;
+    border-radius: 18px;
+    border-bottom-left-radius: 5px;
+    width: fit-content;
+  }
+  #nele-chatbot .nele-typing.active { display: flex; }
+
+  #nele-chatbot .nele-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #999;
+    animation: nele-bounce 1.4s infinite;
+  }
+  #nele-chatbot .nele-dot:nth-child(2) { animation-delay: 0.2s; }
+  #nele-chatbot .nele-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes nele-bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30%            { transform: translateY(-8px); }
+  }
+
+  /* ── Fehler-Meldung ─────────────────────────────────────────── */
+  #nele-chatbot .nele-error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid #f5c6cb;
+    font-size: 14px;
+    font-family: var(--nele-font);
+  }
+
+  /* ── Input-Zeile ─────────────────────────────────────────────── */
+  #nele-chatbot .nele-input-area {
+    padding: 14px 20px;
+    border-top: 1px solid #e8e8e8;
+    background: #fff;
+    flex-shrink: 0;
+  }
+  #nele-chatbot .nele-input-row { display: flex; gap: 10px; }
+
+  #nele-chatbot .nele-input {
+    flex: 1;
+    padding: 11px 18px;
+    border: 2px solid #e0e0e0;
+    border-radius: 24px;
+    font-size: 16px; /* 16px verhindert Auto-Zoom auf iOS */
+    font-family: var(--nele-font);
+    outline: none;
+    transition: border-color 0.2s;
+    background: #fff;
+    color: #1f1f1f;
+    /* Webflow-Resets überschreiben */
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  #nele-chatbot .nele-input:focus  { border-color: var(--nele-button); }
+  #nele-chatbot .nele-input::placeholder { color: #aaa; }
+
+  #nele-chatbot .nele-send-btn {
+    padding: 11px 22px;
+    background: var(--nele-button);
+    color: #fff;
+    border: none;
+    border-radius: 24px;
+    font-weight: 500;
+    font-size: 15px;
+    font-family: var(--nele-font);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    white-space: nowrap;
+    /* Webflow-Resets überschreiben */
+    -webkit-appearance: none;
+    appearance: none;
+    line-height: normal;
+  }
+  #nele-chatbot .nele-send-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(49, 104, 121, 0.38);
+  }
+  #nele-chatbot .nele-send-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  /* ── Datenschutz-Hinweis ─────────────────────────────────────── */
+  #nele-chatbot .nele-disclaimer {
+    background: #f7f7f7;
+    border-top: 1px solid #e8e8e8;
+    font-size: 11px;
+    color: #777;
+    line-height: 1.5;
+    font-family: var(--nele-font);
+    flex-shrink: 0;
+  }
+
+  /* Klickbare Kopfzeile */
+  #nele-chatbot .nele-disclaimer-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #555;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-family: var(--nele-font);
+  }
+  #nele-chatbot .nele-disclaimer-toggle:hover { color: #333; }
+
+  /* Pfeil-Icon (Chevron via CSS-Border) */
+  #nele-chatbot .nele-disclaimer-arrow {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid #316879;
+    border-bottom: 2px solid #316879;
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+    margin-bottom: 2px;
+  }
+  #nele-chatbot .nele-disclaimer.open .nele-disclaimer-arrow {
+    transform: rotate(-135deg);
+    margin-bottom: -2px;
+  }
+
+  /* Ausklappbarer Text */
+  #nele-chatbot .nele-disclaimer-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0 20px;
+  }
+  #nele-chatbot .nele-disclaimer.open .nele-disclaimer-body {
+    max-height: 300px;
+    padding: 0 20px 12px;
+    overflow-y: auto;
+  }
+
+  #nele-chatbot .nele-disclaimer a {
+    color: var(--nele-button);
+    text-decoration: underline;
+    font-size: 11px;
+  }
+  #nele-chatbot .nele-disclaimer a:hover { color: #1f1f1f; }
+
+  /* ════════════════════════════════════════════════════════════════
+     MOBIL  (≤ 650 px)
+     ════════════════════════════════════════════════════════════════ */
+  @media (max-width: 650px) {
+    #nele-chatbot {
+      padding: 0;
+    }
+
+    #nele-chatbot .nele-card {
+      border-radius: 0;
+      box-shadow: none;
+      /* svh = Small Viewport Height → berücksichtigt Browser-Chrome auf iOS/Android */
+      height: clamp(576px, calc(100svh - 70px), 840px);
+    }
+
+    #nele-chatbot .nele-header    { padding: 13px 16px; gap: 10px; }
+    #nele-chatbot .nele-logo      { width: 50px; height: 50px; }
+    #nele-chatbot .nele-header h2 { font-size: 1rem; }
+
+    #nele-chatbot .nele-reset-btn {
+      font-size: 12px;
+      padding: 5px 11px;
+    }
+
+    #nele-chatbot .nele-messages  { padding: 12px 10px; gap: 10px; }
+    #nele-chatbot .nele-msg       { max-width: 92%; gap: 7px; }
+    #nele-chatbot .nele-avatar    { width: 30px; height: 30px; font-size: 17px; }
+    #nele-chatbot .nele-bubble    { font-size: 14px; padding: 10px 14px; }
+
+    #nele-chatbot .nele-input-area { padding: 10px 12px; }
+    #nele-chatbot .nele-send-btn   { padding: 10px 16px; font-size: 14px; }
+  }
+</style>
+
+<!-- ── HTML-Struktur ─────────────────────────────────────────────── -->
+<div id="nele-chatbot">
+  <div class="nele-card">
+
+    <!-- Header -->
+    <div class="nele-header">
+      <div class="nele-header-content">
+        <img id="nele-logo" src="" alt="NELE Logo" class="nele-logo">
+        <h2 id="nele-title"></h2>
+      </div>
+      <button class="nele-reset-btn" id="nele-reset">Neu starten</button>
+    </div>
+
+    <!-- Nachrichten -->
+    <div class="nele-messages" id="nele-msgs"></div>
+
+    <!-- Eingabe -->
+    <div class="nele-input-area">
+      <div class="nele-input-row">
+        <input
+          type="text"
+          id="nele-input"
+          class="nele-input"
+          placeholder="Schreibe hier deine Antwort…"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="sentences"
+        >
+        <button id="nele-send" class="nele-send-btn">Senden</button>
+      </div>
+    </div>
+
+    <!-- Datenschutz -->
+    <div class="nele-disclaimer" id="nele-disclaimer">
+      <button class="nele-disclaimer-toggle" id="nele-disclaimer-toggle" aria-expanded="false">
+        <span>🔒 Hinweise zum Datenschutz</span>
+        <span class="nele-disclaimer-arrow"></span>
+      </button>
+      <div class="nele-disclaimer-body" id="nele-disclaimer-body"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Marked.js für Markdown-Rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  // ═══════════════════════════════════════════════════════════════
+  //  KONFIGURATION – hier alle Anpassungen vornehmen
+  // ═══════════════════════════════════════════════════════════════
+
+  var CONFIG = {
+
+    // ── Proxy-Server ────────────────────────────────────────────
+    proxyUrl: 'https://proxy.nele-campus.org/api/chat',
+
+    // ── Texte ───────────────────────────────────────────────────
+    // Überschrift im Header (HTML erlaubt, z. B. <br> für Umbruch)
+    headerTitle: 'KI-Chatbot Nelli findet für dich die passende Fortbildung!',
+
+    // Name des Chatbots (für Avatar-Alt-Text)
+    botName: 'Nelli',
+
+    // Erste Nachricht des Chatbots beim Öffnen
+    welcomeMessage: [
+      'Hallo, ich bin der KI-Chatbot Nelli und unterstütze dich dabei, für dich passende Fortbildungen auf dem NELE\u2009–\u2009Campus zu finden!',
+      '',
+      'Entdecke unsere Online-Selbstlernkurse: kostenlos, zeit- und ortsunabhängig absolvierbar und mit Teilnahmebescheinigung zur Anrechnung für dein Fortbildungskontingent!',
+      '',
+      'Meine erste Frage:',
+      '**Welche Rolle hast du an deiner Schule? Lehrkraft, Schulleitung, pädagogisches Personal oder eine andere Rolle?**'
+    ].join('\n'),
+
+    // ── Bilder ──────────────────────────────────────────────────
+    logoUrl:   'https://kiron-static.s3.cbk.cloud.syseleven.net/resources/client-resources/12/assets/new-n/nele-n-1.png',
+    avatarUrl: 'https://kiron-static.s3.cbk.cloud.syseleven.net/resources/client-resources/12/assets/new-n/n-avatar-chatbot.png',
+
+    // ── Farben (werden als CSS-Variablen gesetzt) ────────────────
+    headerColor: '#bff0ed',
+    buttonColor: '#316879',
+
+    // ── Schrift ─────────────────────────────────────────────────
+    fontFamily: 'Work Sans',
+    fontUrl:    'https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap',
+
+    // ── Datenschutz ─────────────────────────────────────────────
+    privacyUrl: 'https://app.nele-campus.org/privacy-policy/#privacy',
+
+    privacyNotice: 'Bitte gib keine persönlichen Daten (wie deinen vollen Namen, Adressen oder Namen von Schüler:innen/Kolleg:innen) in diesen Chat ein. Deine Anfragen werden über unseren eigenen Server weitergeleitet – deine IP-Adresse wird nicht an Mistral übermittelt. Die Eingaben werden zur Beantwortung über die Mistral-API auf europäischen Servern DSGVO-konform verarbeitet. Zur Qualitätssicherung werden Gesprächsverläufe anonymisiert auf unserem Server gespeichert und nach 180 Tagen automatisch gelöscht. Deine Daten werden nicht zum Training von KI-Modellen verwendet. Weitere Informationen findest du in unserer <a href="PRIVACY_URL" target="_blank">Datenschutzerklärung</a>.',
+
+    privacyCredit: '',
+
+  };
+
+  // ═══════════════════════════════════════════════════════════════
+  //  AB HIER NICHTS MEHR ÄNDERN
+  // ═══════════════════════════════════════════════════════════════
+
+  // Font laden (wenn konfiguriert)
+  if (CONFIG.fontUrl) {
+    var fl = document.createElement('link');
+    fl.rel = 'stylesheet';
+    fl.href = CONFIG.fontUrl;
+    document.head.appendChild(fl);
+  }
+
+  // CSS-Variablen und statische Inhalte aus CONFIG befüllen
+  var root = document.getElementById('nele-chatbot');
+  root.style.setProperty('--nele-header', CONFIG.headerColor);
+  root.style.setProperty('--nele-button', CONFIG.buttonColor);
+  root.style.setProperty('--nele-font',
+    "'" + CONFIG.fontFamily + "', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif");
+
+  document.getElementById('nele-logo').src = CONFIG.logoUrl;
+  document.getElementById('nele-logo').alt = CONFIG.botName + ' Logo';
+  document.getElementById('nele-title').innerHTML = CONFIG.headerTitle;
+
+  var privacyText = CONFIG.privacyNotice.replace('PRIVACY_URL', CONFIG.privacyUrl);
+  var creditLine  = CONFIG.privacyCredit ? '<br><br>' + CONFIG.privacyCredit : '';
+  document.getElementById('nele-disclaimer-body').innerHTML = privacyText + creditLine;
+
+  // Akkordeon-Toggle
+  var disclaimerEl     = document.getElementById('nele-disclaimer');
+  var disclaimerToggle = document.getElementById('nele-disclaimer-toggle');
+  disclaimerToggle.addEventListener('click', function () {
+    var isOpen = disclaimerEl.classList.toggle('open');
+    disclaimerToggle.setAttribute('aria-expanded', isOpen);
+  });
+
+  // ── Marked.js konfigurieren ──────────────────────────────────
+  marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
+
+  // Links immer in neuem Tab öffnen
+  marked.use({
+    renderer: {
+      link: function (href, title, text) {
+        var h  = (href  && typeof href  === 'object') ? href.href  : href;
+        var ti = (href  && typeof href  === 'object') ? href.title : title;
+        var tx = (href  && typeof href  === 'object') ? href.text  : text;
+        return '<a href="' + h + '"' + (ti ? ' title="' + ti + '"' : '') +
+               ' target="_blank" rel="noopener noreferrer">' + tx + '</a>';
+      }
+    }
+  });
+
+  // ── DOM-Referenzen ───────────────────────────────────────────
+  var messagesEl = document.getElementById('nele-msgs');
+  var inputEl    = document.getElementById('nele-input');
+  var sendBtn    = document.getElementById('nele-send');
+  var resetBtn   = document.getElementById('nele-reset');
+
+  // ── Storage-Schlüssel ────────────────────────────────────────
+  var STORE_HISTORY = 'nele_chat_history';
+  var STORE_ROLE    = 'nele_user_role';
+
+  var history = [];
+
+  function saveHistory() {
+    try { localStorage.setItem(STORE_HISTORY, JSON.stringify(history)); }
+    catch (e) { /* kein LocalStorage → kein Problem */ }
+  }
+
+  function loadHistory() {
+    try {
+      var saved = localStorage.getItem(STORE_HISTORY);
+      if (saved) {
+        history = JSON.parse(saved);
+        history.forEach(function (m) { addMessage(m.content, m.role, false); });
+        return true;
+      }
+    } catch (e) { /* ignorieren */ }
+    return false;
+  }
+
+  function clearHistory() {
+    try {
+      localStorage.removeItem(STORE_HISTORY);
+      localStorage.removeItem(STORE_ROLE);
+    } catch (e) { /* ignorieren */ }
+  }
+
+  // ── Nachrichten rendern ──────────────────────────────────────
+  function addMessage(content, role, animate) {
+    if (animate === undefined) animate = true;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'nele-msg ' + role;
+    if (!animate) wrap.style.animation = 'none';
+
+    var avatar = document.createElement('div');
+    avatar.className = 'nele-avatar';
+    if (role === 'user') {
+      avatar.textContent = '👤';
+    } else {
+      var img = document.createElement('img');
+      img.src = CONFIG.avatarUrl;
+      img.alt = CONFIG.botName;
+      avatar.appendChild(img);
+    }
+
+    var bubble = document.createElement('div');
+    bubble.className = 'nele-bubble';
+    if (role === 'assistant') {
+      try { bubble.innerHTML = marked.parse(content); }
+      catch (e) { bubble.textContent = content; }
+    } else {
+      bubble.textContent = content;
+    }
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
+
+    if (role === 'assistant' && animate) {
+      // Zum Anfang der neuen Antwort scrollen, damit Nutzer von oben lesen kann
+      setTimeout(function () {
+        var rect          = wrap.getBoundingClientRect();
+        var containerRect = messagesEl.getBoundingClientRect();
+        var targetTop     = rect.top - containerRect.top + messagesEl.scrollTop - 12;
+        messagesEl.scrollTo({ top: targetTop, behavior: 'smooth' });
+      }, 50);
+    } else {
+      // Nutzer-Nachrichten & initiale Willkommensnachricht: ans Ende scrollen
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+  }
+
+  function showTyping() {
+    var wrap = document.createElement('div');
+    wrap.className = 'nele-msg assistant';
+    wrap.id = 'nele-typing-row';
+
+    var avatar = document.createElement('div');
+    avatar.className = 'nele-avatar';
+    var img = document.createElement('img');
+    img.src = CONFIG.avatarUrl;
+    img.alt = CONFIG.botName;
+    avatar.appendChild(img);
+
+    var dots = document.createElement('div');
+    dots.className = 'nele-typing active';
+    dots.innerHTML = '<div class="nele-dot"></div><div class="nele-dot"></div><div class="nele-dot"></div>';
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(dots);
+    messagesEl.appendChild(wrap);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function hideTyping() {
+    var el = document.getElementById('nele-typing-row');
+    if (el) el.remove();
+  }
+
+  function showError(msg) {
+    var div = document.createElement('div');
+    div.className = 'nele-error';
+    div.textContent = '❌ Fehler: ' + msg;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    setTimeout(function () { if (div.parentNode) div.remove(); }, 5000);
+  }
+
+  // ── Session-ID (einmalig pro Tab) ───────────────────────────
+  var sessionId = sessionStorage.getItem('nele_session_id');
+  if (!sessionId) {
+    sessionId = 'sess_' + Math.random().toString(36).substr(2, 12);
+    sessionStorage.setItem('nele_session_id', sessionId);
+  }
+
+  // ── Nachricht absenden ───────────────────────────────────────
+  function sendMessage() {
+    var text = inputEl.value.trim();
+    if (!text) return;
+
+    history.push({ role: 'user', content: text });
+
+    // Erste Nutzereingabe = Rolle → in Folgesitzungen als Kontext voranstellen
+    if (history.filter(function (m) { return m.role === 'user'; }).length === 1) {
+      try { localStorage.setItem(STORE_ROLE, text); } catch (e) { /* ignorieren */ }
+    }
+
+    saveHistory();
+    addMessage(text, 'user');
+    inputEl.value   = '';
+    inputEl.disabled  = true;
+    sendBtn.disabled  = true;
+    showTyping();
+
+    var savedRole = null;
+    try { savedRole = localStorage.getItem(STORE_ROLE); } catch (e) { /* ignorieren */ }
+    var userCount = history.filter(function (m) { return m.role === 'user'; }).length;
+    var payload   = (savedRole && userCount === 1)
+      ? [{ role: 'user', content: savedRole }].concat(history)
+      : history;
+
+    fetch(CONFIG.proxyUrl, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ sessionId: sessionId, messages: payload })
+    })
+    .then(function (res) {
+      if (!res.ok) {
+        return res.json().catch(function () { return {}; }).then(function (d) {
+          throw new Error(d.error || 'Fehler ' + res.status);
+        });
+      }
+      return res.json();
+    })
+    .then(function (data) {
+      hideTyping();
+      if (data.message) {
+        history.push({ role: 'assistant', content: data.message });
+        saveHistory();
+        addMessage(data.message, 'assistant');
+      } else {
+        throw new Error('Unerwartetes Antwortformat');
+      }
+    })
+    .catch(function (err) {
+      hideTyping();
+      history.pop();
+      saveHistory();
+      showError(err.message);
+      console.error('[NELE Chatbot]', err);
+    })
+    .finally(function () {
+      inputEl.disabled = false;
+      sendBtn.disabled = false;
+      inputEl.focus();
+    });
+  }
+
+  // ── Chat zurücksetzen ────────────────────────────────────────
+  function resetChat() {
+    if (history.length > 0) {
+      if (!confirm('Möchtest du den Chat wirklich zurücksetzen? Der Verlauf wird gelöscht.')) return;
+    }
+    history = [];
+    messagesEl.innerHTML = '';
+    clearHistory();
+    addMessage(CONFIG.welcomeMessage, 'assistant', false);
+  }
+
+  // ── Event-Listener ───────────────────────────────────────────
+  inputEl.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  sendBtn.addEventListener('click', sendMessage);
+  resetBtn.addEventListener('click', resetChat);
+
+  // ── Start ────────────────────────────────────────────────────
+  if (!loadHistory()) {
+    addMessage(CONFIG.welcomeMessage, 'assistant', false);
+  }
+
+}()); // Ende IIFE
+</script>

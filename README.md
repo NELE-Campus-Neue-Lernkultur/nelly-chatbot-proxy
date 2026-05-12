@@ -99,14 +99,41 @@ Copy `.env.example` to `.env` and fill in your values:
 | `LOG_RETENTION_DAYS` | How many days conversations are kept before automatic deletion (default: `180`) |
 | `EXPORT_TOKEN` | A secret token for the on-demand export link — choose any long random string |
 
-### Chatbot configuration (`chatbot.html`)
+### Chatbot frontend — two versions
 
-Open `chatbot.html` and find the `CONFIG` block at the very top of the script. All visual and textual customizations are in one place — you don't need to touch anything else in the file.
+There are two ready-to-use frontend files. Both share the same `CONFIG` block and the same feature set — the only difference is how they are deployed.
+
+| File | Use case |
+|---|---|
+| `chatbot.html` | Standalone page — host it anywhere, open directly in the browser |
+| `chatbot-embed.html` | Embed into an existing website (e.g. Webflow) via an HTML embed element |
+
+#### Standalone (`chatbot.html`)
+
+Upload the file to any web host or open it directly. It occupies the full browser viewport and works out of the box.
+
+#### Webflow embed (`chatbot-embed.html`)
+
+Paste the entire file contents into a **Webflow HTML Embed** element inside a new section on your page. The chatbot's CSS is fully scoped to `#nele-chatbot` — it does not interfere with any of Webflow's own styles.
+
+If you embed it on a domain not yet listed in `ALLOWED_ORIGINS` on the proxy server, add that domain and restart the server:
+
+```bash
+# On the server: edit .env
+ALLOWED_ORIGINS=https://your-org.org,https://www.your-org.org,https://your-new-domain.org
+
+# Then restart
+pm2 restart nelly-proxy --update-env
+```
+
+#### Configuration (`CONFIG` block)
+
+Open either file and find the `CONFIG` block at the very top of the script. All visual and textual customizations are in one place — you don't need to touch anything else in the file.
 
 ```js
 const CONFIG = {
     proxyUrl:       'https://proxy.your-org.org/api/chat',
-    pageTitle:      'Your Chatbot Name',
+    pageTitle:      'Your Chatbot Name',   // standalone only (browser tab title)
     headerTitle:    'Your header headline',
     botName:        'Your Bot',
     welcomeMessage: 'Hello! I am ...',
@@ -127,6 +154,7 @@ const CONFIG = {
 - `fontUrl`: find any font on [fonts.google.com](https://fonts.google.com), copy the embed URL, and paste it here. Leave empty to use the system font.
 - `privacyNotice` supports HTML. The placeholder `PRIVACY_URL` in the text is automatically replaced with the value of `privacyUrl`.
 - `headerTitle` supports HTML — use `<br>` for a line break in the headline.
+- **EU AI Act (Art. 50):** Make sure your `welcomeMessage` and/or `headerTitle` clearly identify the chatbot as an AI system to users.
 
 ### Configuring chatbot quality and behavior (Mistral)
 
@@ -217,7 +245,8 @@ ssh root@YOUR_SERVER_IP "cd /root/nelly-proxy && node logger.test.js"
 | `logger.js` | Saves and retrieves conversations from the SQLite database |
 | `mailer.js` | Formats and sends email reports |
 | `export.js` | CLI script to trigger a full export manually |
-| `chatbot.html` | The chatbot frontend — deploy this to your website |
+| `chatbot.html` | Standalone chatbot frontend — deploy as a full page |
+| `chatbot-embed.html` | Embed version — paste into a Webflow HTML Embed element or any CMS |
 | `logger.test.js` | Unit tests for the logger |
 | `test.sh` | Smoke tests for the live server |
 | `.env` | Your configuration (never commit this file) |
