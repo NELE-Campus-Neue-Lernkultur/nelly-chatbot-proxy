@@ -101,6 +101,11 @@
     border-color: rgba(31, 31, 31, 0.8);
   }
 
+  #nele-chatbot .nele-reset-btn:focus-visible {
+    outline: 3px solid #316879;
+    outline-offset: 2px;
+  }
+
   /* ── Nachrichten-Bereich ─────────────────────────────────────── */
   #nele-chatbot .nele-messages {
     flex: 1;
@@ -364,6 +369,11 @@
     cursor: not-allowed;
   }
 
+  #nele-chatbot .nele-send-btn:focus-visible {
+    outline: 3px solid #316879;
+    outline-offset: 2px;
+  }
+
   /* ── Datenschutz-Hinweis ─────────────────────────────────────── */
   #nele-chatbot .nele-disclaimer {
     background: #f7f7f7;
@@ -393,6 +403,11 @@
     font-family: var(--nele-font);
   }
   #nele-chatbot .nele-disclaimer-toggle:hover { color: #333; }
+
+  #nele-chatbot .nele-disclaimer-toggle:focus-visible {
+    outline: 3px solid #316879;
+    outline-offset: -3px;
+  }
 
   /* Pfeil-Icon (Chevron via CSS-Border) */
   #nele-chatbot .nele-disclaimer-arrow {
@@ -479,7 +494,7 @@
     </div>
 
     <!-- Nachrichten -->
-    <div class="nele-messages" id="nele-msgs"></div>
+    <div class="nele-messages" id="nele-msgs" role="log" aria-live="polite" aria-label="Chat-Verlauf"></div>
 
     <!-- Eingabe -->
     <div class="nele-input-area">
@@ -492,6 +507,7 @@
           autocomplete="off"
           autocorrect="off"
           autocapitalize="sentences"
+          aria-label="Deine Nachricht"
         >
         <button id="nele-send" class="nele-send-btn">Senden</button>
       </div>
@@ -499,9 +515,9 @@
 
     <!-- Datenschutz -->
     <div class="nele-disclaimer" id="nele-disclaimer">
-      <button class="nele-disclaimer-toggle" id="nele-disclaimer-toggle" aria-expanded="false">
+      <button class="nele-disclaimer-toggle" id="nele-disclaimer-toggle" aria-expanded="false" aria-controls="nele-disclaimer-body">
         <span>🔒 Hinweise zum Datenschutz</span>
-        <span class="nele-disclaimer-arrow"></span>
+        <span class="nele-disclaimer-arrow" aria-hidden="true"></span>
       </button>
       <div class="nele-disclaimer-body" id="nele-disclaimer-body"></div>
     </div>
@@ -557,7 +573,7 @@
     // ── Datenschutz ─────────────────────────────────────────────
     privacyUrl: 'https://app.nele-campus.org/privacy-policy/#privacy',
 
-    privacyNotice: 'Bitte gib keine persönlichen Daten (wie deinen vollen Namen, Adressen oder Namen von Schüler:innen/Kolleg:innen) in diesen Chat ein. Deine Anfragen werden über unseren eigenen Server weitergeleitet – deine IP-Adresse wird nicht an Mistral übermittelt. Die Eingaben werden zur Beantwortung über die Mistral-API auf europäischen Servern DSGVO-konform verarbeitet. Zur Qualitätssicherung werden Gesprächsverläufe anonymisiert auf unserem Server gespeichert und nach 180 Tagen automatisch gelöscht. Deine Daten werden nicht zum Training von KI-Modellen verwendet. Weitere Informationen findest du in unserer <a href="PRIVACY_URL" target="_blank">Datenschutzerklärung</a>.',
+    privacyNotice: 'Bitte gib keine persönlichen Daten (wie deinen vollen Namen, Adressen oder Namen von Schüler:innen/Kolleg:innen) in diesen Chat ein. Deine Anfragen werden über unseren eigenen Server weitergeleitet – deine IP-Adresse wird nicht an Mistral übermittelt. Die Eingaben werden zur Beantwortung über die Mistral-API auf europäischen Servern DSGVO-konform verarbeitet. Zur Qualitätssicherung werden Gesprächsverläufe anonymisiert auf unserem Server gespeichert sowie ausgewertet und nach 180 Tagen automatisch gelöscht. Deine Daten werden nicht zum Training von KI-Modellen verwendet. Weitere Informationen findest du in unserer <a href="PRIVACY_URL" target="_blank">Datenschutzerklärung</a>.',
 
     privacyCredit: '',
 

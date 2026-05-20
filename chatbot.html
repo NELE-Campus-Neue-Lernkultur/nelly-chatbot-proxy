@@ -93,6 +93,11 @@
             background: rgba(31, 31, 31, 0.1);
         }
 
+        .reset-button:focus-visible {
+            outline: 3px solid #316879;
+            outline-offset: 2px;
+        }
+
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -322,6 +327,11 @@
             cursor: not-allowed;
         }
 
+        #sendButton:focus-visible {
+            outline: 3px solid #316879;
+            outline-offset: 2px;
+        }
+
         .typing-indicator {
             display: none;
             align-items: center;
@@ -442,7 +452,7 @@
             <button class="reset-button" id="resetButton">Neu starten</button>
         </div>
 
-        <div class="chat-messages" id="chatMessages">
+        <div class="chat-messages" id="chatMessages" role="log" aria-live="polite" aria-label="Chat-Verlauf">
             <!-- Nachrichten werden hier eingefügt -->
         </div>
 
@@ -452,6 +462,7 @@
                     type="text"
                     id="messageInput"
                     placeholder="Schreibe hier deine Antwort…"
+                    aria-label="Deine Nachricht"
                     autocomplete="off"
                 >
                 <button id="sendButton">Senden</button>
@@ -523,7 +534,7 @@ Meine erste Frage:
         privacyUrl: 'https://app.nele-campus.org/privacy-policy/#privacy',
 
         // Datenschutzhinweis-Text (HTML erlaubt; PRIVACY_URL wird durch den Wert von privacyUrl ersetzt)
-        privacyNotice: 'Bitte gib keine persönlichen Daten (wie deinen vollen Namen, Adressen oder Namen von Schüler:innen/Kolleg:innen) in diesen Chat ein. Deine Anfragen werden über unseren eigenen Server weitergeleitet – deine IP-Adresse wird nicht an Mistral übermittelt. Die Eingaben werden zur Beantwortung über die Mistral-API auf europäischen Servern DSGVO-konform verarbeitet. Zur Qualitätssicherung werden Gesprächsverläufe anonymisiert auf unserem Server gespeichert und nach 180 Tagen automatisch gelöscht. Deine Daten werden nicht zum Training von KI-Modellen verwendet. Weitere Informationen findest du in unserer <a href="PRIVACY_URL" target="_blank">Datenschutzerklärung</a>.',
+        privacyNotice: 'Bitte gib keine persönlichen Daten (wie deinen vollen Namen, Adressen oder Namen von Schüler:innen/Kolleg:innen) in diesen Chat ein. Deine Anfragen werden über unseren eigenen Server weitergeleitet – deine IP-Adresse wird nicht an Mistral übermittelt. Die Eingaben werden zur Beantwortung über die Mistral-API auf europäischen Servern DSGVO-konform verarbeitet. Zur Qualitätssicherung werden Gesprächsverläufe anonymisiert auf unserem Server gespeichert sowie ausgewertet und nach 180 Tagen automatisch gelöscht. Deine Daten werden nicht zum Training von KI-Modellen verwendet. Weitere Informationen findest du in unserer <a href="PRIVACY_URL" target="_blank">Datenschutzerklärung</a>.',
 
         // Urheberrechtshinweis unterhalb des Datenschutztexts (HTML erlaubt, leer lassen um wegzulassen)
         privacyCredit: '',
